@@ -2,7 +2,7 @@
   <div @click="itemClicked()"
     :class="`side-bar-item ${icon ? 'w-icon' : 'text-only'}`" v-tooltip="tooltip">
     <Icon v-if="icon" :icon="icon" size="small" :url="url" />
-    <p class="small-title" v-else>{{ title }}</p>
+    <p class="small-title">{{ title }}</p>
   </div>
 </template>
 
