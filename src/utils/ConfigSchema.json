@@ -10,7 +10,7 @@
       "type": "array",
       "description": "List of additional config files to load as extra pages",
       "items": {
-        "title": "Pages",
+        "title": "Page",
         "type": "object",
         "required": ["name", "path"],
         "additionalProperties": false,
@@ -24,6 +24,90 @@
             "title": "Path",
             "type": "string",
             "description": "The file name, or path. If in public directory, use just `file-name.yml`"
+          },
+          "displayData": {
+            "title": "Display Data",
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Optional meta data for customizing a page",
+            "properties": {
+              "hideForUsers": {
+                "title": "Hide for Users",
+                "type": "array",
+                "description": "Page will be visible to all users, except for those specified in this list",
+                "items": {
+                  "type": "string",
+                  "description": "Username for the user that will not be able to view this page"
+                }
+              },
+              "showForUsers": {
+                "title": "Show for Users",
+                "type": "array",
+                "description": "Page will be hidden from all users, except for those specified in this list",
+                "items": {
+                  "type": "string",
+                  "description": "Username for the user that will have access to this page"
+                }
+              },
+              "hideForGuests": {
+                "title": "Hide for Guests?",
+                "type": "boolean",
+                "default": false,
+                "description": "If set to true, page will be visible for logged in users, but not for guests"
+              },
+              "showForKeycloakUsers": {
+                "title": "Show for select Keycloak groups or roles",
+                "type": "object",
+                "description": "Configure the Keycloak groups or roles that will have access to this page",
+                "additionalProperties": false,
+                "properties": {
+                  "groups": {
+                    "title": "Show for Groups",
+                    "type": "array",
+                    "description": "Page will be hidden from all users except those with one or more of these groups",
+                    "items": {
+                      "type": "string",
+                      "description": "Name of the group that will be able to view this page"
+                    }
+                  },
+                  "roles": {
+                    "title": "Show for Roles",
+                    "type": "array",
+                    "description": "Page will be hidden from all users except those with one or more of these roles",
+                    "items": {
+                      "type": "string",
+                      "description": "Name of the role that will be able to view this page"
+                    }
+                  }
+                }
+              },
+              "hideForKeycloakUsers": {
+                "title": "Hide for select Keycloak groups or roles",
+                "type": "object",
+                "description": "Configure the Keycloak groups or roles that will not have access to this page",
+                "additionalProperties": false,
+                "properties": {
+                  "groups": {
+                    "title": "Hide for Groups",
+                    "type": "array",
+                    "description": "Page will be hidden from users with any of these groups",
+                    "items": {
+                      "type": "string",
+                      "description": "name of the group that will not be able to view this page"
+                    }
+                  },
+                  "roles": {
+                    "title": "Hide for Roles",
+                    "type": "array",
+                    "description": "Page will be hidden from users with any of roles",
+                    "items": {
+                      "type": "string",
+                      "description": "name of the role that will not be able to view this page"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -416,14 +500,9 @@
             "users": {
               "title": "Users",
               "type": "array",
-              "description": "Usernames and hashed credentials for frontend authentication",
+              "description": "Usernames and hashed credentials for frontend authentication. Needs to be set at build-time.",
               "items": {
                 "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "user",
-                  "hash"
-                ],
                 "properties": {
                   "user": {
                     "title": "Username",
@@ -437,6 +516,12 @@
                     "minLength": 64,
                     "maxLength": 64
                   },
+                  "password": {
+                    "title": "Password",
+                    "type": "string",
+                    "description": "The environmental variable pointing to a plaintext password for that user. Must start with VUE_APP_",
+                    "pattern": "^VUE_APP_.*"
+                  },
                   "type": {
                     "title": "Privileges",
                     "type": "string",
@@ -446,6 +531,70 @@
                     ],
                     "description": "User type, denoting privilege level, either admin or normal",
                     "default": "normal"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["user"],
+                "oneOf": [
+                  { "required": ["hash"] },
+                  { "required": ["password"] }
+                ]
+              }
+            },            
+            "enableOidc": {
+              "title": "Enable OIDC?",
+              "type": "boolean",
+              "default": false,
+              "description": "If set to true, enable OIDC. See appConfig.auth.oidc"
+            },
+            "oidc": {
+              "type": "object",
+              "description": "Configuration for OIDC",
+              "additionalProperties": false,
+              "required": [
+                "clientId",
+                "endpoint"
+              ],
+              "properties": {
+                "endpoint": {
+                  "title": "OIDC Endpoint",
+                  "type": "string",
+                  "description": "Endpoint of OIDC provider"
+                },
+                "clientId": {
+                  "title": "OIDC Client Id",
+                  "type": "string",
+                  "description": "ClientId from OIDC provider"
+                }
+              }
+            },
+            "enableHeaderAuth": {
+              "title": "Enable HeaderAuth?",
+              "type": "boolean",
+              "default": false,
+              "description": "If set to true, enable Header Authentication. See appConfig.auth.headerAuth"
+            },
+            "headerAuth": {
+              "type": "object",
+              "description": "Configuration for headerAuth",
+              "additionalProperties": false,
+              "required": [
+                "proxyWhitelist"
+              ],
+              "properties": {
+                "userHeader": {
+                  "title": "User Header",
+                  "type": "string",
+                  "description": "Header name which contains username",
+                  "default": "REMOTE_USER"
+                },
+                "proxyWhitelist": {
+                  "title": "Upstream Proxy Auth Trust",
+                  "type": "array",
+                  "description": "Upstream proxy servers to expect authenticated requests from",
+                  "items": {
+                    "type": "string",
+                    "description": "IPs of upstream proxies that will be trusted"
                   }
                 }
               }
@@ -505,13 +654,13 @@
           "title": "Prevent saving config to disk",
           "type": "boolean",
           "default": false,
-          "description": "If set to true, no users will not be able to save config changes to disk through the UI"
+          "description": "If set to true, users will be prevented from saving config changes to disk through the UI"
         },
         "preventLocalSave": {
           "title": "Prevent saving config to local storage",
           "type": "boolean",
           "default": false,
-          "description": "If set to true, no users will not be able to save config changes to the browser's local storage"
+          "description": "If set to true, users will be prevented from applying config changes to local storage"
         },
         "disableConfiguration": {
           "title": "Disable all UI Config",
@@ -898,6 +1047,11 @@
                   "type": "number",
                   "description": "A numeric shortcut key, between 0 and 9. Useful for quickly launching frequently used applications"
                 },
+                "rel": {
+                  "title": "rel",
+                  "type": "string",
+                  "description": "The rel attribute for the link. For specifying the relationship between the current document and the linked document"
+                },
                 "tags": {
                   "title": "Tags",
                   "type": "array",
@@ -1002,6 +1156,11 @@
                 }
               }
             }
+          },
+          "filteredItems": {
+            "title": "Filtered Items - temp",
+            "type": "array",
+            "description": "This attribute will be deprecated in the next release - do not use!"
           }
         }
       }
