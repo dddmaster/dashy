@@ -89,8 +89,9 @@ export default {
       );
       const formatType = (ht) => capitalize(ht.replaceAll('_', ' '));
       holidays.forEach((holiday) => {
+        const holText = holiday.name[0].text;
         results.push({
-          name: holiday.name.filter(p => p.lang == this.options.lang)[0].text || holiday.name[0].text,
+          name: holiday.name.filter(p => p.lang === this.options.lang)[0].text || holText,
           date: makeDate(holiday.date),
           type: formatType(holiday.holidayType),
           observed: holiday.observedOn ? makeDate(holiday.observedOn) : '',

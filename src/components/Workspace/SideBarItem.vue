@@ -1,9 +1,10 @@
 <template>
-  <div @click="itemClicked()"
+  <a @click="itemClicked($event)"
+    :href=url
     :class="`side-bar-item ${icon ? 'w-icon' : 'text-only'}`" v-tooltip="tooltip">
     <Icon v-if="icon" :icon="icon" size="small" :url="url" />
     <p class="small-title">{{ title }}</p>
-  </div>
+  </a>
 </template>
 
 <script>
@@ -23,8 +24,10 @@ export default {
     Icon,
   },
   methods: {
-    itemClicked() {
+    itemClicked(event) {
+      event.preventDefault();
       if (this.url) this.$emit('launch-app', { url: this.url, target: this.target });
+      return false;
     },
   },
   data() {
